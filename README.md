@@ -75,3 +75,4 @@ The controller uses MQTT discovery to automatically add a switch entity to Home 
 -   **Availability Topic**: `rpi-disk-shelf-controller/status`
 
 Once the controller is running, a new switch named "Disk Shelf" will appear in your Home Assistant dashboard, allowing you to turn the disk shelf on or off and monitor its status.
+
