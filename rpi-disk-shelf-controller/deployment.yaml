@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rpi-disk-shelf-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rpi-disk-shelf-controller
+  template:
+    metadata:
+      labels:
+        app: rpi-disk-shelf-controller
+    spec:
+      containers:
+      - name: rpi-disk-shelf-controller
+        image: your-repo/rpi-disk-shelf-controller:latest
+        env:
+        - name: "MQTT_BROKER"
+          value: "tcp://your-mqtt-broker:1883"
+        - name: "MQTT_CLIENT_ID"
+          value: "rpi-disk-shelf-controller"
+        - name: "MQTT_USERNAME"
+          value: "your-username"
+        - name: "MQTT_PASSWORD"
+          value: "your-password"
+        - name: "STATUS_PIN"
+          value: "GPIO23" # Example pin, change to your actual pin
+        - name: "TOGGLE_PIN"
+          value: "GPIO24" # Example pin, change to your actual pin
+        - name: "MOUNT_COMMAND"
+          value: "mount /dev/sda1 /mnt/storage"
+        securityContext:
+          privileged: true # Required for GPIO access
+      nodeSelector:
+        kubernetes.io/hostname: your-rpi-node # Schedule on the Raspberry Pi node
