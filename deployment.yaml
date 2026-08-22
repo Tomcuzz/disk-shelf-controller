@@ -25,9 +25,9 @@ spec:
         - name: "MQTT_PASSWORD"
           value: "your-password"
         - name: "STATUS_PIN"
-          value: "GPIO23" # Example pin, change to your actual pin
+          value: "GPIO17" # Example pin, change to your actual pin
         - name: "TOGGLE_PIN"
-          value: "GPIO24" # Example pin, change to your actual pin
+          value: "GPIO27" # Example pin, change to your actual pin
         - name: "MOUNT_COMMAND"
           value: "mount /dev/sda1 /mnt/storage"
         securityContext:
