@@ -8,7 +8,8 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -o /rpi-disk-shelf-controller ./cmd/rpi-disk-shelf-controller
+RUN go build -o /rpi-disk-shelf-controller ./cmd/rpi-disk-shelf-controller/main.go
+# RUN CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -o /rpi-disk-shelf-controller ./cmd/rpi-disk-shelf-controller
 
 # Final stage
 FROM alpine:latest
