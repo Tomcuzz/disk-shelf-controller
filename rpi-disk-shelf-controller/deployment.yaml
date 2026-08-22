@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: rpi-disk-shelf-controller
-        image: your-repo/rpi-disk-shelf-controller:latest
+        image: tcousin/rpi-disk-shelf-controller:latest
         env:
         - name: "MQTT_BROKER"
           value: "tcp://your-mqtt-broker:1883"
