@@ -11,4 +11,4 @@ golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
 periph.io/x/conn/v3 v3.7.0 h1:eC3f84P2M0i+Pj53YwG9I3291L+D6n4J1n0iL3N0L4A=
 periph.io/x/conn/v3 v3.7.0/go.mod h1:ypY7UVxgDbP9PJGwFSVelRRagxyXYfttVh7hJZUHEhg=
 periph.io/x/host/v3 v3.7.0 h1:IqN0U/C4fVjL6D3tL14pL6S5pL7N/S4I180o9K9A54g=
-periph.io/x/host/v3 v3.7.0/go.mod h1:bY6M3mI2S1XpD/2D0e4mN7sR9x4uL6oA20fK8U3C9L0=
+periph.io/x/host/v3 v3.7.0/go.mod h1:okb5m0yUYLTM/dnMYWMBX47w4owTzyCPLpZUQb35nhs=
