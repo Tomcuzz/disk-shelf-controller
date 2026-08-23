@@ -8,3 +8,7 @@ golang.org/x/net v0.0.0-20200425230154-ff2c4b7c35a0/go.mod h1:qpuaurCH72eLCgpAm/
 golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/text v0.3.0/go.mod h1:NqM8EUOU14njkJ3fqMW+pc6Ldnwhi/IjpwHt7yyuwOQ=
+periph.io/x/conn/v3 v3.7.0 h1:a4c5Wch1s/lR/E2/r/J8i+4C0mP9IftOaY3s+mNkWwA=
+periph.io/x/conn/v3 v3.7.0/go.mod h1:G9Xh17dAnHnJt8m8o3q4/MTh76J0h01s2V3yqfO6WpA=
+periph.io/x/host/v3 v3.7.0 h1:eK93s8OThS8l/R1e1O1+sT1fI9cWdG1J4L501qA1B4A=
+periph.io/x/host/v3 v3.7.0/go.mod h1:Rk7T3y6jW3xI21m05D5wK0J1YqL29q83M5E1X3Y3q80=
