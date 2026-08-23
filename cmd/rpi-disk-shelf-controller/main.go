@@ -12,7 +12,7 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"periph.io/x/conn/v3/gpio"
-	"periph.io/x/conn/v3/gpio/gpiocdev"
+	"periph.io/x/host/v3/gpiocdev"
 	"periph.io/x/host/v3"
 )
 
