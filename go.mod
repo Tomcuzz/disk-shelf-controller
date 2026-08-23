@@ -11,4 +11,7 @@ require (
 require (
 	github.com/gorilla/websocket v1.4.2 // indirect
 	golang.org/x/net v0.0.0-20200425230154-ff2c4b7c35a0 // indirect
+	periph.io/x/d2xx v0.0.1 // indirect
 )
+
+replace periph.io/x/d2xx => github.com/periph/d2xx v0.0.1
