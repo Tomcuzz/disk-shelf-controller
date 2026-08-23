@@ -14,7 +14,6 @@ import (
 	"periph.io/x/conn/v3/gpio"
 	"periph.io/x/conn/v3/gpio/gpioreg"
 	"periph.io/x/host/v3"
-	"periph.io/x/host/v3/gpioioctl" // Linux character device driver
 )
 
 var (
@@ -45,7 +44,7 @@ func main() {
 		log.Fatalf("failed to initialize periph: %v", err)
 	}
 
-	statusPin = gpiocdev.ByName(statusPinName)
+	statusPin = gpioreg.ByName(statusPinName)
 	if statusPin == nil {
 		log.Fatalf("failed to find status pin: %s", statusPinName)
 	}
@@ -53,7 +52,7 @@ func main() {
 		log.Fatalf("failed to set status pin as input: %v", err)
 	}
 
-	togglePin = gpiocdev.ByName(togglePinName)
+	togglePin = gpioreg.ByName(togglePinName)
 	if togglePin == nil {
 		log.Fatalf("failed to find toggle pin: %s", togglePinName)
 	}
