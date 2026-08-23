@@ -23,6 +23,7 @@ var (
 	mqttPassword  = os.Getenv("MQTT_PASSWORD")
 	statusPinName = os.Getenv("STATUS_PIN")
 	togglePinName = os.Getenv("TOGGLE_PIN")
+	mountCommand  = os.Getenv("MOUNT_COMMAND")
 	statusPin     gpio.PinIO
 	togglePin     gpio.PinIO
 )
