@@ -6,8 +6,6 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"net/http"
@@ -19,6 +17,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
@@ -37,7 +36,7 @@ var (
 	statusPin     gpio.PinIO
 	togglePin     gpio.PinIO
 	metricAddr	  = os.Getenv("listen-address")
-	promMetrics	  metrics
+	promMetrics	  *metrics
 	//var addr = flag.String("listen-address", ":8080", "The address to listen on for HTTP requests.")
 )
 
@@ -132,7 +131,7 @@ func main() {
 	go monitorStatusPin(client, statusPin)
 
 	// Keep the application running
-	log.Fatal(http.ListenAndServe(*metricAddr, nil))
+	log.Fatal(http.ListenAndServe(metricAddr, nil))
 }
 
 func onCommand(client mqtt.Client, msg mqtt.Message) {
