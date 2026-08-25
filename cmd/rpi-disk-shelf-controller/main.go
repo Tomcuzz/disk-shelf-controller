@@ -10,11 +10,21 @@ import (
 	"syscall"
 	"time"
 
+	"net/http"
+
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"periph.io/x/conn/v3/gpio"
 	"periph.io/x/conn/v3/gpio/gpioreg"
 	"periph.io/x/host/v3"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
+
+type metrics struct {
+	onState prometheus.Gauge
+}
 
 var (
 	mqttBroker    = os.Getenv("MQTT_BROKER")
@@ -26,6 +36,9 @@ var (
 	mountCommand  = os.Getenv("MOUNT_COMMAND")
 	statusPin     gpio.PinIO
 	togglePin     gpio.PinIO
+	metricAddr	  = os.Getenv("listen-address")
+	promMetrics	  metrics
+	//var addr = flag.String("listen-address", ":8080", "The address to listen on for HTTP requests.")
 )
 
 const (
@@ -39,6 +52,25 @@ const (
 
 func main() {
 	log.Println("Starting RPI Disk Shelf Controller")
+
+	// Setup Metrics
+	log.Println("Settng up metrics")
+	if len(metricAddr) == 0 {
+        metricAddr = ":8080"
+    }
+	reg := prometheus.NewRegistry()
+	promMetrics = &metrics{
+		onState: promauto.With(reg).NewGauge(prometheus.GaugeOpts{
+			Name: "disk-shelf_on-state",
+			Help: "The current on/off state of the disk shelf",
+		}),
+	}
+	reg.MustRegister(
+		collectors.NewGoCollector(),
+		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
+	)
+	reg.MustRegister(promMetrics.onState)
+	http.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
 
 	// Initialize GPIO
 	if _, err := host.Init(); err != nil {
@@ -83,9 +115,12 @@ func main() {
 	// Check initial state and turn on if necessary
 	initialState := statusPin.Read()
 	if initialState == gpio.Low {
+		promMetrics.onState.Set(0)
 		log.Println("Disk shelf is off, turning it on...")
 		togglePower(togglePin)
 		time.Sleep(5 * time.Second) // Wait for the shelf to power up
+	} else {
+		promMetrics.onState.Set(1)
 	}
 
 	// Run mount command
@@ -97,13 +132,7 @@ func main() {
 	go monitorStatusPin(client, statusPin)
 
 	// Keep the application running
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
-	<-c
-
-	log.Println("Shutting down RPI Disk Shelf Controller")
-	client.Publish(availabilityTopic, 0, true, "offline")
-	client.Disconnect(250)
+	log.Fatal(http.ListenAndServe(*metricAddr, nil))
 }
 
 func onCommand(client mqtt.Client, msg mqtt.Message) {
@@ -162,6 +191,11 @@ func monitorStatusPin(client mqtt.Client, pin gpio.PinIO) {
 	var lastState gpio.Level = gpio.Low
 	for {
 		currentState := pin.Read()
+		if currentState == gpio.Low {
+			promMetrics.onState.Set(0)
+		} else {
+			promMetrics.onState.Set(1)
+		}
 		if currentState != lastState {
 			state := "OFF"
 			if currentState == gpio.High {
