@@ -108,24 +108,24 @@ func main() {
 	}
 	client := mqtt.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		log.Fatalf("failed to connect to MQTT broker: %v", token.Error())
+		log.Warningf("failed to connect to MQTT broker: %v", token.Error())
 	}
 
 	// Check initial state and turn on if necessary
 	initialState := statusPin.Read()
 	if initialState == gpio.Low {
 		promMetrics.onState.Set(0)
-		log.Println("Disk shelf is off, turning it on...")
-		togglePower(togglePin)
-		time.Sleep(5 * time.Second) // Wait for the shelf to power up
+		// log.Println("Disk shelf is off, turning it on...")
+		// togglePower(togglePin)
+		// time.Sleep(5 * time.Second) // Wait for the shelf to power up
 	} else {
 		promMetrics.onState.Set(1)
 	}
 
 	// Run mount command
-	if err := runMountCommand(); err != nil {
-		log.Printf("failed to run mount command: %v", err)
-	}
+	// if err := runMountCommand(); err != nil {
+	// 	log.Printf("failed to run mount command: %v", err)
+	// }
 
 	// Goroutine to monitor status pin and publish changes
 	go monitorStatusPin(client, statusPin)
