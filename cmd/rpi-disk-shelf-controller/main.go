@@ -108,7 +108,7 @@ func main() {
 	}
 	client := mqtt.NewClient(opts)
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		log.Warningf("failed to connect to MQTT broker: %v", token.Error())
+		log.Printf("failed to connect to MQTT broker: %v", token.Error())
 	}
 
 	// Check initial state and turn on if necessary
