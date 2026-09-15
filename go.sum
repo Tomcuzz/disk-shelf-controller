@@ -33,7 +33,7 @@ github.com/prometheus/procfs v0.21.1/go.mod h1:aB55Cww9pdSJVHk0hUf0inxWyyjPogFIj
 github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
 github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
 github.com/warthog618/gpiod v0.8.2 h1:J1G/qM/H6f7o46kS28iAnc0A1g20T2+yJ+TjM5eXq1A=
-github.com/warthog618/gpiod v0.8.2/go.mod h1:s3M3x0n70yC95z9aR7G9m1l9u+Y/6eC856T9jM4G2yU=
+github.com/warthog618/gpiod v0.8.2/go.mod h1:O7BNpHjCn/4YS5yFVmoFZAlY1LuYuQ8vhPf0iy/qdi4=
 github.com/warthog618/gpiod/gpiodsys v0.6.0 h1:30E0Xv0X6vD8L2T6N+N0m95V2n36p4e5j/3N7V306pM=
 github.com/warthog618/gpiod/gpiodsys v0.6.0/go.mod h1:3x7V88P8s8y4a9m9L2G9865K8/7y4L61J67J1P1M8nU=
 go.uber.org/goleak v1.3.0 h1:2K3zAYmnTNqV73imy9J1T3WC+gmCePx2hEGkimedGto=
