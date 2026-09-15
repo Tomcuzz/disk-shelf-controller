@@ -25,7 +25,7 @@ type metrics struct {
 }
 
 var (
-	hostIp		  = os.Getenv("$HOST_IP")
+	hostIp		  = os.Getenv("HOST_IP")
 	mqttBroker    = os.Getenv("MQTT_BROKER")
 	mqttClientID  = os.Getenv("MQTT_CLIENT_ID")
 	mqttUsername  = os.Getenv("MQTT_USERNAME")
