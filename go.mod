@@ -5,6 +5,7 @@ go 1.25.0
 require (
 	github.com/eclipse/paho.mqtt.golang v1.3.5
 	github.com/prometheus/client_golang v1.24.1
+	github.com/warthog618/gpiod v0.8.2
 	periph.io/x/conn/v3 v3.7.0
 	periph.io/x/host/v3 v3.7.0
 )
