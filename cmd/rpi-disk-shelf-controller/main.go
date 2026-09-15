@@ -11,9 +11,7 @@ import (
 	"net/http"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"periph.io/x/conn/v3/gpio"
-	"periph.io/x/conn/v3/gpio/gpioreg"
-	"periph.io/x/host/v3"
+	"github.com/warthog618/gpiod"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
@@ -30,13 +28,14 @@ var (
 	mqttClientID  = os.Getenv("MQTT_CLIENT_ID")
 	mqttUsername  = os.Getenv("MQTT_USERNAME")
 	mqttPassword  = os.Getenv("MQTT_PASSWORD")
-	statusPinName = os.Getenv("STATUS_PIN")
-	togglePinName = os.Getenv("TOGGLE_PIN")
+	statusPinName = os.Getenv("STATUS_PIN") // Expects integer string like "17"
+	togglePinName = os.Getenv("TOGGLE_PIN") // Expects integer string like "27"
 	mountCommand  = os.Getenv("MOUNT_COMMAND")
-	statusPin     gpio.PinIO
-	togglePin     gpio.PinIO
-	metricAddr	  = os.Getenv("listen-address")
-	promMetrics	  *metrics
+	statusLine    *gpiod.Line
+	toggleLine    *gpiod.Line
+	metricAddr    = os.Getenv("listen-address")
+	promMetrics   *metrics	
+	promMetrics   *metrics
 	//var addr = flag.String("listen-address", ":8080", "The address to listen on for HTTP requests.")
 )
 
@@ -53,44 +52,54 @@ func main() {
 	log.Println("Starting RPI Disk Shelf Controller")
 
 	// Setup Metrics
-	log.Println("Settng up metrics")
+	log.Println("Setting up metrics")
 	if len(metricAddr) == 0 {
-        metricAddr = ":8080"
-    }
+		metricAddr = ":8080"
+	}
 	reg := prometheus.NewRegistry()
 	promMetrics = &metrics{
 		onState: promauto.With(reg).NewGauge(prometheus.GaugeOpts{
-			Name: "disk-shelf_on-state",
+			Name: "disk_shelf_on_state",
 			Help: "The current on/off state of the disk shelf",
 		}),
 	}
 	reg.MustRegister(
 		collectors.NewGoCollector(),
 		collectors.NewProcessCollector(collectors.ProcessCollectorOpts{}),
-		// promMetrics.onState,
 	)
 	http.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}))
 
-	// Initialize GPIO
-	if _, err := host.Init(); err != nil {
-		log.Fatalf("failed to initialize periph: %v", err)
+	// Parse Pins from Env (libgpiod needs integers)
+	var statusPinOffset, togglePinOffset int
+	_, err := fmt.Sscanf(statusPinName, "%d", &statusPinOffset)
+	if err != nil {
+		log.Fatalf("STATUS_PIN must be an integer offset, got: %s", statusPinName)
+	}
+	_, err = fmt.Sscanf(togglePinName, "%d", &togglePinOffset)
+	if err != nil {
+		log.Fatalf("TOGGLE_PIN must be an integer offset, got: %s", togglePinName)
 	}
 
-	statusPin = gpioreg.ByName(statusPinName)
-	if statusPin == nil {
-		log.Fatalf("failed to find status pin: %s", statusPinName)
+	// Initialize GPIO Chip (gpiochip0 is standard on Raspberry Pi)
+	chip, err := gpiod.NewChip("gpiochip0")
+	if err != nil {
+		log.Fatalf("failed to open gpiochip0: %v", err)
 	}
-	if err := statusPin.In(gpio.PullDown, gpio.BothEdges); err != nil {
-		log.Fatalf("failed to set status pin as input: %v", err)
-	}
+	defer chip.Close()
 
-	togglePin = gpioreg.ByName(togglePinName)
-	if togglePin == nil {
-		log.Fatalf("failed to find toggle pin: %s", togglePinName)
+	// Initialize Status Pin as Input with Pull Down
+	statusLine, err = chip.RequestLine(statusPinOffset, gpiod.WithPullDown, gpiod.AsInput)
+	if err != nil {
+		log.Fatalf("failed to request status pin %d: %v", statusPinOffset, err)
 	}
-	if err := togglePin.Out(gpio.Low); err != nil {
-		log.Fatalf("failed to set toggle pin as output: %v", err)
+	defer statusLine.Close()
+
+	// Initialize Toggle Pin as Output (Initial low)
+	toggleLine, err = chip.RequestLine(togglePinOffset, gpiod.AsOutput(0))
+	if err != nil {
+		log.Fatalf("failed to request toggle pin %d: %v", togglePinOffset, err)
 	}
+	defer toggleLine.Close()
 
 	// Initialize MQTT client
 	opts := mqtt.NewClientOptions().AddBroker(mqttBroker).SetClientID(mqttClientID)
@@ -111,24 +120,16 @@ func main() {
 		log.Printf("failed to connect to MQTT broker: %v", token.Error())
 	}
 
-	// Check initial state and turn on if necessary
-	initialState := statusPin.Read()
-	if initialState == gpio.Low {
+	// Check initial state
+	initialState, _ := statusLine.Value()
+	if initialState == 0 {
 		promMetrics.onState.Set(0)
-		// log.Println("Disk shelf is off, turning it on...")
-		// togglePower(togglePin)
-		// time.Sleep(5 * time.Second) // Wait for the shelf to power up
 	} else {
 		promMetrics.onState.Set(1)
 	}
 
-	// Run mount command
-	// if err := runMountCommand(); err != nil {
-	// 	log.Printf("failed to run mount command: %v", err)
-	// }
-
 	// Goroutine to monitor status pin and publish changes
-	go monitorStatusPin(client, statusPin)
+	go monitorStatusPin(client, statusLine)
 
 	// Keep the application running
 	log.Fatal(http.ListenAndServe(metricAddr, nil))
@@ -136,18 +137,20 @@ func main() {
 
 func onCommand(client mqtt.Client, msg mqtt.Message) {
 	log.Printf("Received command: %s", msg.Payload())
-	if string(msg.Payload()) == "ON" && statusPin.Read() == gpio.Low {
-		togglePower(togglePin)
-	} else if string(msg.Payload()) == "OFF" && statusPin.Read() == gpio.High {
-		togglePower(togglePin)
+	currentVal, _ := statusLine.Value()
+
+	if string(msg.Payload()) == "ON" && currentVal == 0 {
+		togglePower(toggleLine)
+	} else if string(msg.Payload()) == "OFF" && currentVal == 1 {
+		togglePower(toggleLine)
 	}
 }
 
-func togglePower(pin gpio.PinIO) {
+func togglePower(line *gpiod.Line) {
 	log.Println("Pulsing toggle pin")
-	pin.Out(gpio.High)
+	line.SetValue(1)
 	time.Sleep(1 * time.Second)
-	pin.Out(gpio.Low)
+	line.SetValue(0)
 }
 
 func runMountCommand() error {
@@ -186,18 +189,25 @@ func publishDiscoveryMessage(client mqtt.Client) {
 	token.Wait()
 }
 
-func monitorStatusPin(client mqtt.Client, pin gpio.PinIO) {
-	var lastState gpio.Level = gpio.Low
+func monitorStatusPin(client mqtt.Client, line *gpiod.Line) {
+	var lastState int = 0
 	for {
-		currentState := pin.Read()
-		if currentState == gpio.Low {
+		currentState, err := line.Value()
+		if err != nil {
+			log.Printf("failed to read status pin value: %v", err)
+			time.Sleep(1 * time.Second)
+			continue
+		}
+
+		if currentState == 0 {
 			promMetrics.onState.Set(0)
 		} else {
 			promMetrics.onState.Set(1)
 		}
+
 		if currentState != lastState {
 			state := "OFF"
-			if currentState == gpio.High {
+			if currentState == 1 {
 				state = "ON"
 			}
 			log.Printf("Disk shelf state changed to: %s", state)
