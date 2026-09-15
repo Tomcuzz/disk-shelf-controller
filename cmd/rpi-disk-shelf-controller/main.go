@@ -34,7 +34,6 @@ var (
 	statusLine    *gpiod.Line
 	toggleLine    *gpiod.Line
 	metricAddr    = os.Getenv("listen-address")
-	promMetrics   *metrics	
 	promMetrics   *metrics
 	//var addr = flag.String("listen-address", ":8080", "The address to listen on for HTTP requests.")
 )
