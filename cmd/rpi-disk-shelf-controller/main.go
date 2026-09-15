@@ -25,6 +25,7 @@ type metrics struct {
 }
 
 var (
+	hostIp		  = os.Getenv("$HOST_IP")
 	mqttBroker    = os.Getenv("MQTT_BROKER")
 	mqttClientID  = os.Getenv("MQTT_CLIENT_ID")
 	mqttUsername  = os.Getenv("MQTT_USERNAME")
@@ -54,17 +55,26 @@ func main() {
 	//Process pin names
 	statusPinName = strings.Replace(statusPinName, "GPIO", "", -1)
 	togglePinName = strings.Replace(togglePinName, "GPIO", "", -1)
-
+	
+	// Read host IP passed via env (e.g., Downward API)
+	if hostIp == "" {
+		hostIp = "unknown"
+	}
+	
 	// Setup Metrics
 	log.Println("Setting up metrics")
 	if len(metricAddr) == 0 {
 		metricAddr = ":8080"
 	}
+	
 	reg := prometheus.NewRegistry()
 	promMetrics = &metrics{
 		onState: promauto.With(reg).NewGauge(prometheus.GaugeOpts{
 			Name: "disk_shelf_on_state",
 			Help: "The current on/off state of the disk shelf",
+			ConstLabels: prometheus.Labels{
+				"host": hostIp,
+			},
 		}),
 	}
 	reg.MustRegister(
