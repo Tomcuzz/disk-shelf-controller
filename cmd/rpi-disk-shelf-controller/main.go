@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"string"
 	"time"
 
 	"net/http"
@@ -49,6 +50,10 @@ const (
 
 func main() {
 	log.Println("Starting RPI Disk Shelf Controller")
+
+	//Process pin names
+	statusPinName = strings.Replace(statusPinName, "GPIO", "", -1)
+	togglePinName = strings.Replace(togglePinName, "GPIO", "", -1)
 
 	// Setup Metrics
 	log.Println("Setting up metrics")
